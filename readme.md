@@ -22,8 +22,8 @@ Inspired by [Enigma](https://en.wikipedia.org/wiki/Enigma_machine), this is a va
 
 It is impossible to validate all the possible input, for example 64bit integers. The encode and decode functions are tested for several large range of integers, there is no collision (decode error) at the moment.
 
-- [0, 2^32) - tested pass
-- [16345678912345678900, 16345678912345678900 + 2^16 * 1000) - tested pass
+- `[0, 2^32)`
+- `[16345678912345678900, 16345678912345678900 + 2^32)`
 
 ## More Optimization
 
@@ -34,6 +34,7 @@ It is impossible to validate all the possible input, for example 64bit integers.
 ## Samples
 
 ```text
+Integer              -> encode()    -> decode()
 16345678912345678900 -> M6aZ1qFgD1J -> 16345678912345678900
 16345678912345678901 -> kLe0wbhTtwN -> 16345678912345678901
 16345678912345678902 -> HUXGAnfV3Az -> 16345678912345678902
