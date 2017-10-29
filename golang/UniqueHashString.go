@@ -1,8 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"os"
 	"runtime"
+	"runtime/pprof"
 	"sync"
 )
 
@@ -22,22 +26,25 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 
 var unRandomBase64 = make([]uint64, 128)
 
-func encode(value uint64) (code []byte) {
+func encode(value uint64) []byte {
+	var code [11]byte
 	var accumulate, remainder, position uint64
+	var count int
 
 	for {
 		accumulate += remainder
 		remainder = value & 0x3f
 		value >>= 6
 		position = (accumulate + remainder) & 0x3f
-		code = append(code, randomBase64[position])
+		code[count] = randomBase64[position]
+		count++
 
 		if value == 0 {
 			break
 		}
 	}
 
-	return
+	return code[0:count]
 }
 
 func decode(code []byte) (value uint64) {
@@ -63,7 +70,7 @@ func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 	for t := range inTask {
 		for i := t.left; i < t.right; i++ {
 			code := encode(i)
-			value := decode(code[0:])
+			value := decode(code)
 			if i != value {
 				fmt.Println("Decode Error", i, "->", string(code), "->", value)
 			}
@@ -76,6 +83,39 @@ func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 }
 
 func main() {
+	// Code for Profiling
+	// $ ./UniqueHashString -cpuprofile cpu.prof -memprofile mem.prof
+	// $ go tool pprof UniqueHashString.exe cpu.prof
+	// (pprof) top
+	// Check the top usage
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
+	var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+	flag.Parse()
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		f.Close()
+	}
+	// Code for Profiling End
+
 	// Reverse random base64 into an array.
 	for k, v := range randomBase64 {
 		unRandomBase64[v] = uint64(k)
