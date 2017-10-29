@@ -17,7 +17,7 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 //     "r3fi0dH_6kYyOaQ8s2eUBWucGS7PnNq9moFbTEh4C1xwMXJzIv-VZDljtRgLA5pK";
 //     "vjOShxu1Cq8-JBsylNTGoiX5Kpt0cAEZr9VP2HMw3mkzFI4YL_bfRUegDWn7Qa6d";
 
-var unRandomBase64 = make(map[byte]uint64)
+var unRandomBase64 = make([]uint64, 128)
 
 func encode(value uint64) (code []byte) {
 	var accumulate, remainder, position uint64
@@ -73,7 +73,7 @@ func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 }
 
 func main() {
-	// Reverse random base64 into a map.
+	// Reverse random base64 into an array.
 	for k, v := range randomBase64 {
 		unRandomBase64[v] = uint64(k)
 	}
