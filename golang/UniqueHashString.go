@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+import "sync"
 
 var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAMkHxQ_2jYmSJ")
 
@@ -50,27 +51,52 @@ func decode(code []byte) (value uint64) {
 	return
 }
 
+type task struct {
+	left  uint64
+	right uint64
+}
+
+func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
+	for t := range inTask {
+		for i := t.left; i < t.right; i++ {
+			code := encode(i)
+			value := decode(code[0:])
+			if i != value {
+				fmt.Println("Decode Error", i, "->", string(code), "->", value)
+			}
+		}
+
+		fmt.Printf("Worker %d completed calculation of range [%d, %d)\n", id, t.left, t.right)
+	}
+
+	wg.Done()
+}
+
 func main() {
+	// Reverse random base64 into a map.
 	for k, v := range randomBase64 {
 		unRandomBase64[v] = uint64(k)
 	}
 
-	// fmt.Println("Value -> encode() -> decode()")
-
-	count := 0
-	for i := uint64(16345678912345678900); i < uint64(16345678912345678900+65536000); i++ {
-		code := encode(i)
-		value := decode(code[0:])
-		// fmt.Println(i, "->", string(code), "->", value)
-
-		if i != value {
-			count++
-		}
-
-		if i%65536 == 0 {
-			fmt.Print(".")
-		}
+	// Start workers.
+	var wg sync.WaitGroup
+	chTask := make(chan task)
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go worker(i, &wg, chTask)
 	}
 
-	fmt.Println("Decode Error Count =", count)
+	// Assign task to workers.
+	step := uint64(655360)
+	for i := uint64(16345678912345678900); i < uint64(16345678912345678900+step*100); i += step {
+		chTask <- task{i, i + step}
+	}
+
+	// Close task channel.
+	close(chTask)
+
+	// Waiting for all workers complete.
+	wg.Wait()
+
+	fmt.Println("Calculation complete!")
 }
