@@ -22,22 +22,25 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 
 var unRandomBase64 = make([]uint64, 128)
 
-func encode(value uint64) (code []byte) {
+func encode(value uint64) []byte {
+	var code [11]byte
 	var accumulate, remainder, position uint64
+	var count int
 
 	for {
 		accumulate += remainder
 		remainder = value & 0x3f
 		value >>= 6
 		position = (accumulate + remainder) & 0x3f
-		code = append(code, randomBase64[position])
+		code[count] = randomBase64[position]
+		count++
 
 		if value == 0 {
 			break
 		}
 	}
 
-	return
+	return code[0:count]
 }
 
 func decode(code []byte) (value uint64) {
@@ -63,7 +66,7 @@ func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 	for t := range inTask {
 		for i := t.left; i < t.right; i++ {
 			code := encode(i)
-			value := decode(code[0:])
+			value := decode(code)
 			if i != value {
 				fmt.Println("Decode Error", i, "->", string(code), "->", value)
 			}
