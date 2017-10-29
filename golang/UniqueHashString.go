@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
-import "sync"
+import (
+	"fmt"
+	"runtime"
+	"sync"
+)
 
 var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAMkHxQ_2jYmSJ")
 
@@ -81,7 +84,8 @@ func main() {
 	// Start workers.
 	var wg sync.WaitGroup
 	chTask := make(chan task)
-	for i := 0; i < 4; i++ {
+	numCPU := runtime.NumCPU()
+	for i := 0; i < numCPU; i++ {
 		wg.Add(1)
 		go worker(i, &wg, chTask)
 	}
