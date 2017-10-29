@@ -15,7 +15,7 @@ std::string randomBase64 = "Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wA
 //     "r3fi0dH_6kYyOaQ8s2eUBWucGS7PnNq9moFbTEh4C1xwMXJzIv-VZDljtRgLA5pK";
 //     "vjOShxu1Cq8-JBsylNTGoiX5Kpt0cAEZr9VP2HMw3mkzFI4YL_bfRUegDWn7Qa6d";
 
-std::unordered_map<char, unsigned int> unRandomBase64;
+unsigned int unRandomBase64[128];
 
 std::string encode(uint64_t value)
 {
@@ -42,7 +42,7 @@ uint64_t decode(std::string &code)
     size_t size = code.size();
     for (size_t i = 0; i < size; i++)
     {
-        position = unRandomBase64[code[i]];
+        position = unRandomBase64[int(code[i])];
         remainder = (position + 64 - accumulate) & 0x3f;
         accumulate += remainder;
         value += remainder << (6 * i);
@@ -53,9 +53,10 @@ uint64_t decode(std::string &code)
 
 int main()
 {
+    // Reverse random base64 into an array.
     for (int i = 0; i < 64; i++)
     {
-        unRandomBase64[randomBase64[i]] = i;
+        unRandomBase64[int(randomBase64[i])] = i;
     }
 
     // std::cout << "Value -> encode() -> decode()" << std::endl;
