@@ -22,10 +22,8 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 
 var unRandomBase64 = make([]uint64, 128)
 
-func encode(value uint64) []byte {
-	var code [11]byte
+func encode(value uint64) (code [11]byte, count int) {
 	var accumulate, remainder, position uint64
-	var count int
 
 	for {
 		accumulate += remainder
@@ -40,7 +38,7 @@ func encode(value uint64) []byte {
 		}
 	}
 
-	return code[0:count]
+	return code, count
 }
 
 func decode(code []byte) (value uint64) {
@@ -65,10 +63,10 @@ type task struct {
 func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 	for t := range inTask {
 		for i := t.left; i < t.right; i++ {
-			code := encode(i)
-			value := decode(code)
+			code, count := encode(i)
+			value := decode(code[0:count])
 			if i != value {
-				fmt.Println("Decode Error", i, "->", string(code), "->", value)
+				fmt.Println("Decode Error", i, "->", string(code[0:count]), "->", value)
 			}
 		}
 
@@ -94,7 +92,7 @@ func main() {
 	}
 
 	// Assign task to workers.
-	step := uint64(655360)
+	step := uint64(6553600)
 	for i := uint64(16345678912345678900); i < uint64(16345678912345678900+step*100); i += step {
 		chTask <- task{i, i + step}
 	}
