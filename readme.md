@@ -27,9 +27,9 @@ It is impossible to validate all the possible input, for example 64bit integers.
 
 ## More Optimization
 
-- The base64 table could be further optimized, it is base64url table after 10,000 random swap.
-- In C++ code, the unordered map which reverse base64 could be defined by initializer lists, the current code is to test different base64 tables.
-- The golang code is around 9 time slow than C++ code, need to figure if there is anything that can be optimized, such as effectively passing arrays.
+- The base64 table could be further obfuscated, it is base64url table after 10,000 random swap.
+- Reverse base64 was using unordered map, array is around 3-4x faster than map.
+- The encode() of golang was very slow, the profiling shows half of time was spend on runtime.mallocgc(), it is running twice as faster by using array with length.
 
 ## Samples
 

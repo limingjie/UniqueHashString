@@ -22,7 +22,7 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 
 var unRandomBase64 = make([]uint64, 128)
 
-func encode(value uint64) (code [11]byte, count int) {
+func encode(value uint64) (code [11]byte, size int) {
 	var accumulate, remainder, position uint64
 
 	for {
@@ -30,15 +30,15 @@ func encode(value uint64) (code [11]byte, count int) {
 		remainder = value & 0x3f
 		value >>= 6
 		position = (accumulate + remainder) & 0x3f
-		code[count] = randomBase64[position]
-		count++
+		code[size] = randomBase64[position]
+		size++
 
 		if value == 0 {
 			break
 		}
 	}
 
-	return code, count
+	return code, size
 }
 
 func decode(code []byte) (value uint64) {
@@ -63,10 +63,10 @@ type task struct {
 func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 	for t := range inTask {
 		for i := t.left; i < t.right; i++ {
-			code, count := encode(i)
-			value := decode(code[0:count])
+			code, size := encode(i)
+			value := decode(code[0:size])
 			if i != value {
-				fmt.Println("Decode Error", i, "->", string(code[0:count]), "->", value)
+				fmt.Println("Decode Error", i, "->", string(code[0:size]), "->", value)
 			}
 		}
 
