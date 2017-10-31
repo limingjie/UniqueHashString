@@ -50,7 +50,7 @@ func Encode(value uint64) (code [11]byte, size int) {
 		}
 	}
 
-	return code, size
+	return
 }
 
 // Decode hash string to integer
@@ -62,7 +62,7 @@ func Decode(code []byte) (value uint64) {
 		position = unRandomBase64[code[i]]
 		remainder = (position + 64 - accumulate) & 0x3f
 		accumulate += remainder
-		value += remainder << uint64(6*i)
+		value |= remainder << uint64(6*i)
 	}
 
 	return
@@ -79,11 +79,12 @@ func Worker(id int, wg *sync.WaitGroup, inTask <-chan Task) {
 	for t := range inTask {
 		for i := t.Left; i < t.Right; i++ {
 			code, size := Encode(i)
-			value := Decode(code[:size])
+			Decode(code[:size])
 
-			if i != value {
-				fmt.Println("Decode Error", i, "->", string(code[:size]), "->", value)
-			}
+			// Only for debuggin
+			// if i != value {
+			// 	fmt.Println("Decode Error", i, "->", string(code[:size]), "->", value)
+			// }
 		}
 
 		fmt.Printf("Worker %d completed calculation of range [%d, %d).\n", id, t.Left, t.Right)

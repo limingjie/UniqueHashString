@@ -26,7 +26,7 @@ func TestEncode(t *testing.T) {
 	for index, input := range inputs {
 		code, size := unihash.Encode(input)
 		if string(code[:size]) != outputs[index] {
-			t.Errorf("Encode(%d) failed, the result should be \"%s\", got \"%s\".", input, outputs[index], string(code[:size]))
+			t.Errorf("Encode(%d) failed, expected \"%s\", got \"%s\".", input, outputs[index], string(code[:size]))
 		}
 	}
 }
@@ -54,7 +54,7 @@ func TestDecode(t *testing.T) {
 	for index, input := range inputs {
 		value := unihash.Decode([]byte(input))
 		if value != outputs[index] {
-			t.Errorf("Decode(%s) failed, the result should be %d, got %d.", input, outputs[index], value)
+			t.Errorf("Decode(\"%s\") failed, expected %d, got %d.", input, outputs[index], value)
 		}
 	}
 }
@@ -75,8 +75,8 @@ func TestWorker(t *testing.T) {
 	}
 
 	// Assign task to workers. Starts from 10^19.
-	step := uint64(1010101)
-	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*uint64(numCPU*3)); i += step {
+	step := uint64(100)
+	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*uint64(numCPU)); i += step {
 		tasks <- unihash.Task{i, i + step}
 	}
 
