@@ -59,27 +59,25 @@ int main()
         unRandomBase64[int(randomBase64[i])] = i;
     }
 
-    // std::cout << "Value -> encode() -> decode()" << std::endl;
-
-    int count = 0;
-    for (uint64_t i = 16345678912345678900ull; i < 16345678912345678900ull + 65536000ull; i++)
+    // Starts from 10^19.
+    uint64_t step = 6553600ull;
+    for (uint64_t i = 10000000000000000000ull; i < 10000000000000000000ull + step * 100ull; i += step)
     {
-        std::string code = encode(i);
-        uint64_t value = decode(code);
-        // std::cout << i << " -> "<< code << " -> " << value << std::endl;
-
-        if (i != value)
+        for (uint64_t num = i; num < i + step; num++)
         {
-            count++;
+            std::string code = encode(num);
+            decode(code);
+            // uint64_t value = decode(code);
+            // std::cout << num << " -> " << code << " -> " << value << std::endl;
+
+            // if (num != value)
+            // {
+            //     std::cout << "Decode Error " << num << " -> " << code << " -> " << value << std::endl;
+            // }
         }
 
-        if (i % 65536 == 0)
-        {
-            std::cout << '.';
-        }
+        std::cout << "Completed calculation of range [" << i << ", " << i + step << ")." << std::endl;
     }
-
-    std::cout << "Decode Error Count = " << count << std::endl;
 
     return 0;
 }

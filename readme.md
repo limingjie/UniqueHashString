@@ -23,6 +23,7 @@ Inspired by [Enigma](https://en.wikipedia.org/wiki/Enigma_machine), this is a va
 It is impossible to validate all the possible input, for example 64bit integers. The encode and decode functions are tested for several large range of integers, there is no collision (decode error) at the moment.
 
 - `[0, 2^32)`
+- `[10^19, 10^19 + 2^16 * 10000)`
 - `[16345678912345678900, 16345678912345678900 + 2^32)`
 
 ## More Optimization

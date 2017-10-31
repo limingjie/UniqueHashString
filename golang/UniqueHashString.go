@@ -64,13 +64,16 @@ func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 	for t := range inTask {
 		for i := t.left; i < t.right; i++ {
 			code, size := encode(i)
-			value := decode(code[0:size])
-			if i != value {
-				fmt.Println("Decode Error", i, "->", string(code[0:size]), "->", value)
-			}
+			decode(code[0:size])
+			// value := decode(code[0:size])
+			// fmt.Println(i, "->", string(code[0:size]), "->", value)
+
+			// if i != value {
+			// 	fmt.Println("Decode Error", i, "->", string(code[0:size]), "->", value)
+			// }
 		}
 
-		fmt.Printf("Worker %d completed calculation of range [%d, %d)\n", id, t.left, t.right)
+		fmt.Printf("Worker %d completed calculation of range [%d, %d).\n", id, t.left, t.right)
 	}
 
 	wg.Done()
@@ -91,9 +94,9 @@ func main() {
 		go worker(i, &wg, chTask)
 	}
 
-	// Assign task to workers.
+	// Assign task to workers. Starts from 10^19.
 	step := uint64(6553600)
-	for i := uint64(16345678912345678900); i < uint64(16345678912345678900+step*100); i += step {
+	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*100); i += step {
 		chTask <- task{i, i + step}
 	}
 
@@ -102,6 +105,4 @@ func main() {
 
 	// Waiting for all workers complete.
 	wg.Wait()
-
-	fmt.Println("Calculation complete!")
 }
