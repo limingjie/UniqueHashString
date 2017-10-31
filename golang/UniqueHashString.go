@@ -26,7 +26,7 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 
 var unRandomBase64 = make([]uint64, 128)
 
-func encode(value uint64) (code [11]byte, count int) {
+func encode(value uint64) (code [11]byte, size int) {
 	var accumulate, remainder, position uint64
 
 	for {
@@ -34,15 +34,15 @@ func encode(value uint64) (code [11]byte, count int) {
 		remainder = value & 0x3f
 		value >>= 6
 		position = (accumulate + remainder) & 0x3f
-		code[count] = randomBase64[position]
-		count++
+		code[size] = randomBase64[position]
+		size++
 
 		if value == 0 {
 			break
 		}
 	}
 
-	return code, count
+	return
 }
 
 func decode(code []byte) (value uint64) {
@@ -53,7 +53,7 @@ func decode(code []byte) (value uint64) {
 		position = unRandomBase64[code[i]]
 		remainder = (position + 64 - accumulate) & 0x3f
 		accumulate += remainder
-		value += remainder << uint64(6*i)
+		value |= remainder << uint64(6*i)
 	}
 
 	return
@@ -67,14 +67,17 @@ type task struct {
 func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
 	for t := range inTask {
 		for i := t.left; i < t.right; i++ {
-			code, count := encode(i)
-			value := decode(code[0:count])
-			if i != value {
-				fmt.Println("Decode Error", i, "->", string(code[0:count]), "->", value)
-			}
+			code, size := encode(i)
+			decode(code[0:size])
+			// value := decode(code[0:size])
+			// fmt.Println(i, "->", string(code[0:size]), "->", value)
+
+			// if i != value {
+			// 	fmt.Println("Decode Error", i, "->", string(code[0:size]), "->", value)
+			// }
 		}
 
-		fmt.Printf("Worker %d completed calculation of range [%d, %d)\n", id, t.left, t.right)
+		fmt.Printf("Worker %d completed calculation of range [%d, %d).\n", id, t.left, t.right)
 	}
 
 	wg.Done()
@@ -128,9 +131,9 @@ func main() {
 		go worker(i, &wg, chTask)
 	}
 
-	// Assign task to workers.
+	// Assign task to workers. Starts from 10^19.
 	step := uint64(6553600)
-	for i := uint64(16345678912345678900); i < uint64(16345678912345678900+step*100); i += step {
+	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*100); i += step {
 		chTask <- task{i, i + step}
 	}
 
@@ -139,6 +142,4 @@ func main() {
 
 	// Waiting for all workers complete.
 	wg.Wait()
-
-	fmt.Println("Calculation complete!")
 }
