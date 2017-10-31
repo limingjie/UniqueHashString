@@ -1,12 +1,20 @@
-package main
+package unihash
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 )
 
 var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAMkHxQ_2jYmSJ")
+
+var unRandomBase64 = []uint64{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 20, 49,
+	58, 40, 3, 31, 4, 2, 25, 18, 0, 0, 0, 0, 0, 0, 0, 51, 8, 9, 38, 33, 46, 21,
+	54, 13, 63, 29, 5, 52, 0, 30, 32, 56, 28, 62, 16, 6, 17, 37, 24, 60, 19, 0,
+	0, 0, 0, 57, 0, 22, 42, 10, 45, 23, 48, 15, 47, 34, 59, 53, 12, 61, 43, 11,
+	26, 41, 44, 35, 39, 27, 36, 50, 55, 14, 1, 0, 0, 0, 0, 0,
+}
 
 // Some more random base64 strings
 //     "jt1vZpX9Fi6qHnRhrTb3-UuakzK0_JEW47wxeCO8Qf5IlgPsoYScDm2yNLdGAMBV";
@@ -19,10 +27,14 @@ var randomBase64 = []byte("Nz746LU-BCcolIygTV9Z0GaeX8puRKO5PEisvWDt3qbnrdFhf1wAM
 //     "RoFTY_jOZtbkai8651lp-VqzEgd4rLuDJ2WHBUv3xA9C0m7wKnsPhfMSQecGINXy";
 //     "r3fi0dH_6kYyOaQ8s2eUBWucGS7PnNq9moFbTEh4C1xwMXJzIv-VZDljtRgLA5pK";
 //     "vjOShxu1Cq8-JBsylNTGoiX5Kpt0cAEZr9VP2HMw3mkzFI4YL_bfRUegDWn7Qa6d";
+//
+// Convert randomBase64 to unRandomBase64
+//	for k, v := range randomBase64 {
+//		unRandomBase64[v] = uint64(k)
+//	}
 
-var unRandomBase64 = make([]uint64, 128)
-
-func encode(value uint64) (code [11]byte, size int) {
+// Encode integer to hash string
+func Encode(value uint64) (code [11]byte, size int) {
 	var accumulate, remainder, position uint64
 
 	for {
@@ -41,7 +53,8 @@ func encode(value uint64) (code [11]byte, size int) {
 	return code, size
 }
 
-func decode(code []byte) (value uint64) {
+// Decode hash string to integer
+func Decode(code []byte) (value uint64) {
 	var accumulate, remainder, position uint64
 
 	size := len(code)
@@ -55,54 +68,26 @@ func decode(code []byte) (value uint64) {
 	return
 }
 
-type task struct {
-	left  uint64
-	right uint64
+// Task - range of integers
+type Task struct {
+	Left  uint64
+	Right uint64
 }
 
-func worker(id int, wg *sync.WaitGroup, inTask <-chan task) {
+// Worker for parallel
+func Worker(id int, wg *sync.WaitGroup, inTask <-chan Task) {
 	for t := range inTask {
-		for i := t.left; i < t.right; i++ {
-			code, size := encode(i)
-			decode(code[0:size])
-			// value := decode(code[0:size])
-			// fmt.Println(i, "->", string(code[0:size]), "->", value)
+		for i := t.Left; i < t.Right; i++ {
+			code, size := Encode(i)
+			value := Decode(code[:size])
 
-			// if i != value {
-			// 	fmt.Println("Decode Error", i, "->", string(code[0:size]), "->", value)
-			// }
+			if i != value {
+				fmt.Println("Decode Error", i, "->", string(code[:size]), "->", value)
+			}
 		}
 
-		fmt.Printf("Worker %d completed calculation of range [%d, %d).\n", id, t.left, t.right)
+		fmt.Printf("Worker %d completed calculation of range [%d, %d).\n", id, t.Left, t.Right)
 	}
 
 	wg.Done()
-}
-
-func main() {
-	// Reverse random base64 into an array.
-	for k, v := range randomBase64 {
-		unRandomBase64[v] = uint64(k)
-	}
-
-	// Start workers.
-	var wg sync.WaitGroup
-	chTask := make(chan task)
-	numCPU := runtime.NumCPU()
-	for i := 0; i < numCPU; i++ {
-		wg.Add(1)
-		go worker(i, &wg, chTask)
-	}
-
-	// Assign task to workers. Starts from 10^19.
-	step := uint64(6553600)
-	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*100); i += step {
-		chTask <- task{i, i + step}
-	}
-
-	// Close task channel.
-	close(chTask)
-
-	// Waiting for all workers complete.
-	wg.Wait()
 }
