@@ -77,7 +77,7 @@ func TestWorker(t *testing.T) {
 	// Assign task to workers. Starts from 10^19.
 	step := uint64(100)
 	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*uint64(numCPU)); i += step {
-		tasks <- unihash.Task{i, i + step}
+		tasks <- unihash.Task{Left: i, Right: i + step}
 	}
 
 	// Close task channel.
@@ -99,7 +99,7 @@ func BenchmarkWorker(b *testing.B) {
 	// Assign task to workers. Starts from 10^19.
 	step := uint64(1001001)
 	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*uint64(b.N)); i += step {
-		tasks <- unihash.Task{i, i + step}
+		tasks <- unihash.Task{Left: i, Right: i + step}
 	}
 
 	// Close task channel.

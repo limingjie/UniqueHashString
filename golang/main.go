@@ -20,7 +20,7 @@ func main() {
 	// Assign task to workers. Starts from 10^19.
 	step := uint64(100001)
 	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*15); i += step {
-		tasks <- unihash.Task{i, i + step}
+		tasks <- unihash.Task{Left: i, Right: i + step}
 	}
 
 	// Close task channel.
