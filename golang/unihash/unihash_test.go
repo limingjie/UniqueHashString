@@ -1,11 +1,9 @@
-package unihash_test
+package unihash
 
 import (
 	"runtime"
 	"sync"
 	"testing"
-
-	"../unihash"
 )
 
 // TestEncode - Unit Test
@@ -24,7 +22,7 @@ func TestEncode(t *testing.T) {
 	}
 
 	for index, input := range inputs {
-		code, size := unihash.Encode(input)
+		code, size := Encode(input)
 		if string(code[:size]) != outputs[index] {
 			t.Errorf("Encode(%d) failed, expected \"%s\", got \"%s\".", input, outputs[index], string(code[:size]))
 		}
@@ -33,7 +31,7 @@ func TestEncode(t *testing.T) {
 
 func BenchmarkEncode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		unihash.Encode(uint64(i))
+		Encode(uint64(i))
 	}
 }
 
@@ -52,7 +50,7 @@ func TestDecode(t *testing.T) {
 	}
 
 	for index, input := range inputs {
-		value := unihash.Decode([]byte(input))
+		value := Decode([]byte(input))
 		if value != outputs[index] {
 			t.Errorf("Decode(\"%s\") failed, expected %d, got %d.", input, outputs[index], value)
 		}
@@ -61,23 +59,23 @@ func TestDecode(t *testing.T) {
 
 func BenchmarkDecode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		unihash.Decode([]byte("NVsYmjZmVSB"))
+		Decode([]byte("NVsYmjZmVSB"))
 	}
 }
 
 func TestWorker(t *testing.T) {
 	var wg sync.WaitGroup
-	tasks := make(chan unihash.Task)
+	tasks := make(chan Task)
 	numCPU := runtime.NumCPU()
 	for i := 0; i < numCPU; i++ {
 		wg.Add(1)
-		go unihash.Worker(i, &wg, tasks)
+		go Worker(i, &wg, tasks)
 	}
 
 	// Assign task to workers. Starts from 10^19.
 	step := uint64(100)
 	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*uint64(numCPU)); i += step {
-		tasks <- unihash.Task{Left: i, Right: i + step}
+		tasks <- Task{Left: i, Right: i + step}
 	}
 
 	// Close task channel.
@@ -89,17 +87,17 @@ func TestWorker(t *testing.T) {
 
 func BenchmarkWorker(b *testing.B) {
 	var wg sync.WaitGroup
-	tasks := make(chan unihash.Task)
+	tasks := make(chan Task)
 	numCPU := runtime.NumCPU()
 	for i := 0; i < numCPU; i++ {
 		wg.Add(1)
-		go unihash.Worker(i, &wg, tasks)
+		go Worker(i, &wg, tasks)
 	}
 
 	// Assign task to workers. Starts from 10^19.
 	step := uint64(1001001)
 	for i := uint64(10000000000000000000); i < uint64(10000000000000000000+step*uint64(b.N)); i += step {
-		tasks <- unihash.Task{Left: i, Right: i + step}
+		tasks <- Task{Left: i, Right: i + step}
 	}
 
 	// Close task channel.
