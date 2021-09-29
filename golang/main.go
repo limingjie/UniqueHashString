@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/mingjie-li/UniqueHashString/golang/unihash"
+	"github.com/limingjie/UniqueHashString/golang/unihash"
 )
 
 func main() {
