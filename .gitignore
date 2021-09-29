@@ -1,0 +1,23 @@
+# Binaries for programs and plugins
+*.app
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Packages
+*.zip
+*.7z
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode
